@@ -1,20 +1,22 @@
 package dev.dimension.flare.ui.theme
 
-import android.app.Activity
 import android.os.Build
+import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
 import com.materialkolor.rememberDynamicColorScheme
 import dev.dimension.flare.data.model.LocalAppearanceSettings
 import dev.dimension.flare.data.model.Theme
@@ -127,16 +129,7 @@ fun FlareTheme(
                     },
                 )
         }
-    val view = LocalView.current
-    if (!view.isInEditMode && view.context is Activity) {
-        SideEffect {
-            val window = (view.context as Activity).window
-//            window.statusBarColor = colorScheme.background.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
-            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars =
-                !darkTheme
-        }
-    }
+
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
@@ -144,6 +137,27 @@ fun FlareTheme(
             content.invoke()
         },
     )
+}
+
+@Composable
+fun ComponentActivity.EdgeToEdge() {
+    val darkTheme = isDarkTheme()
+
+    LaunchedEffect(darkTheme) {
+        val barStyle = SystemBarStyle.auto(
+            Color.Transparent.toArgb(),
+            Color.Transparent.toArgb(),
+            detectDarkMode = { darkTheme },
+        )
+        enableEdgeToEdge(
+            statusBarStyle = barStyle,
+            navigationBarStyle = barStyle,
+        )
+
+        // Fix for three-button nav not properly going edge-to-edge.
+        // TODO: https://issuetracker.google.com/issues/298296168
+        window.setFlags(FLAG_LAYOUT_NO_LIMITS, FLAG_LAYOUT_NO_LIMITS)
+    }
 }
 
 @Composable
